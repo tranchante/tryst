@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from backtester.backtest.portfolio import *
+from tryst.backtest.portfolio import *
 import pandas as pd
 import numpy as np
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
-import backtester as bt
+import tryst as bt
 plt.style.use('seaborn')
 
 class MyBacktest():

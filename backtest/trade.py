@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-import backtester as bt
+import tryst as bt
 
 class Trade():
     '''

@@ -13,14 +13,18 @@ from lxml import etree
 import pickle
 import pandas as pd
 import good_morning as gm
-import backtester
 import os
-import backtester.data.download as download
+import tryst.data.quandl as download
 
 class my_data:
+    '''
+    The data used is stored in this class
+    '''            
     def __init__(self):
-        self.symbols = pickle.load(open(r'C:\Users\sonaa\Documents\Workspace\QuantStrategies\backtester\backtester\data\my_symbols.p', 'rb'))
-        self.db = os.path.join(backtester.base_dir, 'db.h5')
+        path =  os.path.dirname(os.path.abspath(download.__file__))
+        print ('data stored at', path)
+        self.symbols = pickle.load(open(os.path.join(path, 'my_symbols.p'), 'rb'))
+        self.db = os.path.join(path, 'db.h5')
         self.start_date = pd.to_datetime('01-01-2000')
         self.end_date = pd.to_datetime('01-01-2018')
         self.open = pd.read_hdf(self.db, 'open').resample('D').ffill().fillna(method='pad').fillna(method='bfill')
@@ -32,7 +36,48 @@ class my_data:
         self.repurchase_price = pd.read_hdf(self.db, 'repurchase_price').resample('D').ffill().fillna(method='pad').fillna(method='bfill')
         self.sale_price = pd.read_hdf(self.db, 'sale_price').resample('D').ffill().fillna(method='pad').fillna(method='bfill')
         self.nav = pd.read_hdf(self.db, 'nav').resample('D').ffill().fillna(method='pad').fillna(method='bfill')
-        
+                #stores transaction costs        
+        self.TC = pd.DataFrame(columns=['long', 'short', 'stock', 
+                                        'hedge', 'total_cost', 'cum_cost'])
+        #stores commissions
+        self.commission = pd.DataFrame(columns=['long', 'short', 'stock', 
+                                                'hedge', 'total_cost', 
+                                                'cum_cost'])
+        #store slippage
+        self.slippage = pd.DataFrame(columns=['long', 'short', 'stock', 
+                                              'hedge', 'total_cost', 
+                                              'cum_cost'])
+
+    def add_costs(self, value, hedge_value, direction, date):
+        '''
+        Costs are added using this function for each trade
+        using the costs defined in params
+        '''
+        self.TC.loc[date, 'stock'] += value*params.transaction_cost
+        self.TC.loc[date, 'hedge'] += hedge_value*params.transaction_cost
+        if direction == 'LONG':
+            self.TC.loc[date, 'long'] += value*params.transaction_cost 
+            self.TC.loc[date, 'short'] += hedge_value*params.transaction_cost 
+        else:
+            self.TC.loc[date, 'short'] += value*params.transaction_cost 
+            self.TC.loc[date, 'long'] += hedge_value*params.transaction_cost 
+        self.commission.loc[date, 'stock'] += value*params.commission
+        self.commission.loc[date, 'hedge'] += hedge_value*params.commission
+        if direction == 'LONG':
+            self.commission.loc[date, 'long'] += value*params.commission 
+            self.commission.loc[date, 'short'] += hedge_value*params.commission 
+        else:
+            self.commission.loc[date, 'short'] += value*params.commission 
+            self.commission.loc[date, 'long'] += hedge_value*params.commission 
+        self.slippage.loc[date, 'stock'] += value*params.slippage
+        self.slippage.loc[date, 'hedge'] += hedge_value*params.slippage
+        if direction == 'LONG':
+            self.slippage.loc[date, 'long'] += value*params.slippage 
+            self.slippage.loc[date, 'short'] += hedge_value*params.slippage 
+        else:
+            self.slippage.loc[date, 'short'] += value*params.slippage 
+            self.slippage.loc[date, 'long'] += hedge_value*params.slippage 
+            
     def create_db(self):
         for s in self.symbols:
             if s in self.open.columns: continue

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from backtester.backtest.trade import *
+from tryst.backtest.trade import *
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-import backtester as bt
+import tryst as bt
 
 class MyPortfolio():
     """
